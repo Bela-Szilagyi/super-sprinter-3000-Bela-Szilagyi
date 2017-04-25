@@ -1,0 +1,112 @@
+from flask import Flask, render_template, request, redirect
+import csv
+app = Flask(__name__)
+
+
+# ID = 0
+# TITLE = 1
+# STORY = 2
+# CRITERIA = 3
+# VALUE = 4
+# ESTIMATION = 5
+# STATUS = 6
+
+
+@app.route('/', methods=['GET', 'POST'])
+def list():
+    stories = read_data('database.csv')
+    if request.method == "POST":
+        return add_new_story()
+    else:
+        return render_template('list.html', stories=stories, title='Super Sprinter 3000')
+
+
+@app.route('/story', methods=['POST'])
+def add_new_story():
+    return render_template('form.html', title='Add new Story', button='Create', story=['', '', '', '', '1000', '2.5', ''])
+
+
+@app.route('/edit/<id>')
+def edit(id):
+    stories = read_data()
+    for row in stories:
+        if row[0] == id:
+            story = row
+    return render_template('form.html', title='Edit Story', button='Update', story=story, id=id)
+
+
+@app.route('/list', methods=['POST'])
+def append_list():
+    stories = read_data('database.csv')
+    if request.form['button'] == 'Create':
+        if len(stories) == 1:
+            id_number = '1'
+        else:
+            id_number = str(int(stories[len(stories)-1][0])+1)
+        new_row = []
+        new_row.append(id_number)
+        new_row.append(request.form['title'])
+        new_row.append(request.form['story'])
+        new_row.append(request.form['criteria'])
+        new_row.append(request.form['value'])
+        new_row.append(request.form['estimation'])
+        new_row.append(request.form['status'])
+        stories = append_data(new_row)
+        return render_template('list.html', stories=stories, title='Super Sprinter 3000')
+    elif request.form['button'] == 'Update':
+        original_data = read_data()
+        id = request.form['id']
+        new_row = []
+        new_row.append(id)
+        new_row.append(request.form['title'])
+        new_row.append(request.form['story'])
+        new_row.append(request.form['criteria'])
+        new_row.append(request.form['value'])
+        new_row.append(request.form['estimation'])
+        new_row.append(request.form['status'])
+        new_data = []
+        for row in original_data:
+            if row[0] != id:
+                new_data.append(row)
+            else:
+                new_data.append(new_row)
+        write_data(new_data)
+        return redirect('/')
+
+
+@app.route('/delete/<id>')
+def delete(id):
+    original_data = read_data()
+    new_data = []
+    for row in original_data:
+        if row[0] != id:
+            new_data.append(row)
+    write_data(new_data)
+    return redirect('/')
+
+
+def read_data(file_name='database.csv'):
+    data = []
+    with open(file_name, newline='') as csvfile:
+            datareader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            for row in datareader:
+                data.append(row)
+    return data
+
+
+def append_data(new_story, file_name='database.csv'):
+    with open(file_name, 'a', newline='') as csvfile:
+        datawriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        datawriter.writerow(new_story)
+    stories = read_data('database.csv')
+    return stories
+
+
+def write_data(story, file_name='database.csv'):
+    with open(file_name, 'w', newline='') as csvfile:
+        datawriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        datawriter.writerows(story)
+
+
+if __name__ == '__main__':
+    app.run()
