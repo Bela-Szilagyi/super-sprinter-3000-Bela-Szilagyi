@@ -3,15 +3,6 @@ import csv
 app = Flask(__name__)
 
 
-# ID = 0
-# TITLE = 1
-# STORY = 2
-# CRITERIA = 3
-# VALUE = 4
-# ESTIMATION = 5
-# STATUS = 6
-
-
 @app.route('/', methods=['GET', 'POST'])
 def list():
     stories = read_data('database.csv')
@@ -36,7 +27,7 @@ def edit(id):
 
 
 @app.route('/list', methods=['POST'])
-def append_list():
+def modify_list():
     stories = read_data('database.csv')
     if request.form['button'] == 'Create':
         if len(stories) == 1:
